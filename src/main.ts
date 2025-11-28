@@ -50,8 +50,8 @@ app.use(
  * Server activation
  */
 
-const PORT = process.env.PORT || 3000;
+const PORT = 4001; 
 
 app.listen(PORT, () => {
-  console.info(`server up on port ${PORT}`);
+  console.info(`server up on port ${PORT} (PROD)`);
 });
