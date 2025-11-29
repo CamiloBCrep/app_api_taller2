@@ -1,27 +1,33 @@
 # 1. Usamos la imagen ligera de Node (Alpine Linux)
 FROM node:lts-alpine
 
-# 2. Creamos el directorio de trabajo
+# 2. INSTALAMOS OPENSSL (CRÍTICO para Prisma en Alpine)
+# Sin esto, Prisma falla porque Alpine no trae las librerías SSL por defecto
+RUN apk add --no-cache openssl libc6-compat
+
+# 3. Directorio de trabajo
 WORKDIR /app
 
-# 3. Copiamos los archivos de dependencias
+# 4. Copiamos los archivos de configuración de paquetes
 COPY package*.json ./
 
-# 4. COPIA CRÍTICA: Copiamos la carpeta de Prisma
-# (Asegúrate de que la ruta 'src/prisma' sea correcta en tu repo)
-COPY src/prisma ./prisma
+# 5. ESTRUCTURA DE CARPETAS (CRÍTICO para Prisma)
+# Tu package.json espera encontrar el schema en "src/prisma/schema.prisma"
+# Creamos la carpeta explícitamente y copiamos el archivo ahí.
+RUN mkdir -p src/prisma
+COPY src/prisma/schema.prisma ./src/prisma/
 
-# 5. Instalamos dependencias y GENERAMOS el cliente Prisma
-# Al ejecutarse aquí adentro, Prisma descarga el binario correcto para Alpine (musl)
+# 6. Instalamos dependencias y GENERAMOS el cliente de Prisma
+# Al hacerse aquí adentro, se descarga el binario correcto para Linux Alpine
 RUN npm install --omit=dev
 RUN npx prisma generate
 
-# 6. Copiamos el código compilado desde tu carpeta dist
-# (Jenkins debe haber ejecutado 'npm run build' antes)
+# 7. Copiamos el código compilado (JavaScript)
+# Jenkins debe haber ejecutado "npm run build" antes de este paso
 COPY dist/api .
 
-# 7. Exponemos el puerto interno (NestJS/Express suele usar 3000 o 3333)
+# 8. Exponemos el puerto interno (NestJS suele usar 3000 o 3333)
 EXPOSE 3000
 
-# 8. Arrancamos la aplicación
+# 9. Comando de inicio
 CMD ["node", "main.js"]
