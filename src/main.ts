@@ -50,8 +50,3 @@ app.use(
  * Server activation
  */
 
-const PORT = 3001; 
-
-app.listen(PORT, () => {
-  console.info(`server up on port ${PORT} (DEV)`);
-});
